@@ -40,6 +40,14 @@ def display_images(image, description):
 
 print("-- Start executing FGSM Attack ---")
 
+###########################################################################################################################################################
+#
+# This function creates an adversarial pattern using the Fast Gradient Sign Method (FGSM). It calculates the gradient of the loss with respect to the 
+# input image using a gradient tape. The input image is scaled by a temperature value before passing it through the pretrained MobileNetV2 model to obtain 
+# predictions. The loss is calculated using the provided loss_object function. The function then computes the gradient of the loss with respect to the 
+# input image and applies a sign operation to obtain the adversarial pattern.
+#
+###########################################################################################################################################################
 def create_adversarial_pattern(input_image, input_label, temperature=1.0):
     with tf.GradientTape() as tape:
         tape.watch(input_image)
@@ -91,8 +99,15 @@ for i, eps in enumerate(epsilons):
 
 print("-- End executing FGSM Attack ---")
 
-print("-- Start executing FGSM Defense ---")
+print("-- Start executing FGSM Defense and Evaluation ---")
 
+###########################################################################################################################################################
+#
+# This function performs FGSM defense by iteratively subtracting the adversarial perturbations from the input image. 
+# The process is repeated for the specified number of iterations. The resulting defense image is clipped to ensure it 
+# stays within the valid pixel value range.
+#
+###########################################################################################################################################################
 def fgsm_defense(input_image, input_label, epsilon, num_iterations):
     defense_image = input_image
     for _ in range(num_iterations):
@@ -101,12 +116,18 @@ def fgsm_defense(input_image, input_label, epsilon, num_iterations):
         defense_image = tf.clip_by_value(defense_image, -1, 1)
     return defense_image
 
-# Example usage
 epsilon = 0.001  # Set the defense strength
 iterations = 10
 defense_image = fgsm_defense(adv_x, label, epsilon, iterations)
 display_images(defense_image, 'FGSM Defense (Epsilon = {:.3f})'.format(epsilon))
 
+###########################################################################################################################################################
+#
+# This function evaluates the regular image, attacked image, and defended image by obtaining predictions and confidence scores from the MobileNetV2 
+# model. The regular image, attacked image, and defended image are displayed along with their respective labels and confidence scores. The function 
+# also prints the label and confidence for each image.
+#
+###########################################################################################################################################################
 def evaluate(attacked_image, defended_image, regular_image):
     attacked_pred = pretrained_model.predict(attacked_image)
     defended_pred = pretrained_model.predict(defended_image)
@@ -143,5 +164,6 @@ def evaluate(attacked_image, defended_image, regular_image):
     print("\nDefended Image:")
     print("Label: {} - Confidence: {:.2f}%".format(defended_label, defended_confidence * 100))
 
-# Example usage
 evaluate(adv_x, defense_image, image)
+
+print("-- End executing FGSM Defense and Evaluation ---")

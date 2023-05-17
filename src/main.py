@@ -1,26 +1,18 @@
-########################################################################################################################################
-
-# This code imports TensorFlow and two libraries, Matplotlib and NumPy, for data visualization. 
-# The MobileNetV2 model and the ImageNet dataset are also imported.
-
-# The code defines four functions:
-
-# preprocess(image): resizes the image to 224x224, converts the image to a float tensor, preprocesses the input image for MobileNetV2 
-# by subtracting the mean RGB values of the ImageNet dataset, and adds a batch dimension to the tensor.
-# get_imagenet_label(probs): returns the label of the highest predicted probability class for an input image.
-# create_adversarial_pattern(input_image, input_label): creates an adversarial perturbation for an input image, given a target label, 
-# using the gradient of the loss with respect to the input image.
-# display_images(image, description): displays an image along with its predicted label and confidence score.
-# The code sets the parameters for Matplotlib visualization and loads a sample image of a yellow Labrador retriever. The image 
-# is preprocessed using preprocess() and the MobileNetV2 model is used to make a prediction on the image.
-
-# The code then uses create_adversarial_pattern() to generate a perturbation for the image, given a target label, and uses 
-# Matplotlib to visualize the perturbation. The code then applies different levels of perturbation to the original image using a 
-# range of epsilon values and displays the results using display_images().
-
-# Finally, the code prints a message to indicate that it has finished executing.
-
-########################################################################################################################################
+###########################################################################################################################################################
+#
+# The provided code demonstrates the implementation of the Fast Gradient Sign Method (FGSM) for adversarial attacks and defenses 
+# using the MobileNetV2 model. It starts by importing the necessary libraries and defining helper functions for image preprocessing, 
+# label extraction, and image display. The MobileNetV2 model is loaded and configured for use. An input image is loaded, preprocessed, 
+# and its predicted label is obtained. Using the FGSM method, an adversarial pattern is created by calculating the gradient of the loss 
+# with respect to the input image and applying a sign operation. Multiple epsilon values are selected, and adversarial examples are generated 
+# by perturbing the input image based on the adversarial pattern. The original image and adversarial examples are displayed. The code then proceeds 
+# to execute the FGSM attack by applying the adversarial pattern to the input image iteratively. A defense function is defined to restore the original 
+# image by subtracting the perturbation from the defense image iteratively. The defended images are displayed. Finally, the regular, attacked, 
+# and defended images are evaluated and compared by obtaining the model's predictions and confidence scores. The code assumes the availability of an 
+# input image file and utilizes the MobileNetV2 model pretrained on the ImageNet dataset. Adjustments may be required for file paths and model 
+# parameters based on individual setups.
+#
+###########################################################################################################################################################
 
 import numpy as np
 import tensorflow as tf
@@ -67,7 +59,7 @@ pretrained_model.trainable = True
 # ImageNet labels
 decode_predictions = tf.keras.applications.mobilenet_v2.decode_predictions
 
-image_path = "../img/lab_puppy_dog.jpg"
+image_path = "../img/panda.jpg"
 image_raw = tf.io.read_file(image_path)
 image = tf.image.decode_image(image_raw)
 
@@ -82,10 +74,8 @@ plt.show()
 
 loss_object = tf.keras.losses.CategoricalCrossentropy()
 
-# Get the input label of the image.
-animal_index = 208
-label = tf.one_hot(animal_index, image_probs.shape[-1])
-label = tf.reshape(label, (1, image_probs.shape[-1]))
+label_index = np.argmax(pretrained_model.predict(image), axis=1)  # Get the predicted label index
+label = tf.one_hot(label_index, pretrained_model.output_shape[-1])  # Convert to one-hot encoded format
 
 perturbations = create_adversarial_pattern(image, label)
 plt.imshow(perturbations[0] * 0.5 + 0.5)  # To change [-1, 1] to [0,1]
@@ -155,6 +145,3 @@ def evaluate(attacked_image, defended_image, regular_image):
 
 # Example usage
 evaluate(adv_x, defense_image, image)
-
-
-
